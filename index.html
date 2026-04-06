@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Dashboard - LPK Yonasindo Intra Pratama</title>
+    <!-- Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Animasi saat file di-drag ke dropzone */
+        .drag-over {
+            background-color: #dbeafe !important; /* Biru muda */
+            border-color: #3b82f6 !important;
+            border-style: solid !important;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b-4 border-blue-600">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-gray-800">
+                <i class="fa-solid fa-users-viewfinder text-blue-600 mr-2"></i> HR Dashboard - LPK Yonasindo
+            </h1>
+            
+            <!-- Mode Info / Auth Button -->
+            <div class="flex items-center">
+                <div id="user-status-badge" class="flex items-center bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200 mr-3">
+                    <i class="fa-solid fa-eye text-gray-500 mr-2"></i>
+                    <span class="text-sm font-medium text-gray-600">Mode: Viewer</span>
+                </div>
+                <button id="auth-btn" onclick="openLoginModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> Login Admin
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Modal Login -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96 max-w-full m-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Login Admin HR</h3>
+                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div id="login-error" class="hidden mb-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Username atau password salah!
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="login-username" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan username" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="login-password" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan password" required>
+                </div>
+                <div class="mb-6 flex items-center">
+                    <input type="checkbox" id="login-remember" class="mr-2 text-blue-600 rounded focus:ring-blue-500 h-4 w-4 cursor-pointer">
+                    <label for="login-remember" class="text-sm text-gray-700 cursor-pointer">Ingat akun saya</label>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                    Masuk
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        
+        <!-- Tab Navigasi -->
+        <div class="flex space-x-2 border-b-2 border-gray-200 mb-6">
+            <button id="tab-masuk" onclick="switchTab('masuk')" class="px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50 focus:outline-none transition-colors rounded-t-lg">
+                <i class="fa-solid fa-inbox mr-1"></i> Kandidat Masuk
+            </button>
+            <button id="tab-lanjutan" onclick="switchTab('lanjutan')" class="px-6 py-3 font-semibold text-gray-500 hover:text-blue-600 hover:bg-gray-50 focus:outline-none transition-colors rounded-t-lg border-b-2 border-transparent">
+                <i class="fa-solid fa-user-check mr-1"></i> Kandidat Lanjutan
+            </button>
+        </div>
+
+        <!-- Filter & Sortir Section -->
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cari Posisi</label>
+                <input type="text" id="filter-position" placeholder="Contoh: Staff Administrasi..." class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500" oninput="applyFilters()">
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Filter Status</label>
+                <select id="filter-status" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500" onchange="applyFilters()">
+                    <option value="">Semua Status (di tab ini)</option>
+                    <option value="Belum wawancara">Belum wawancara</option>
+                    <option value="Sudah diberikan kepada ketua divisi terkait">Sudah diberikan kepada ketua divisi terkait</option>
+                    <option value="Diterima">Diterima</option>
+                </select>
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Min. Pengalaman (Tahun)</label>
+                <input type="number" id="filter-experience" placeholder="0" min="0" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-blue-500 focus:border-blue-500" oninput="applyFilters()">
+            </div>
+            <div>
+                <button onclick="resetFilters()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- TABEL KEPALA SEKOLAH (Eksklusif) -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-3 border-l-4 border-indigo-500 pl-3">
+                <i class="fa-solid fa-user-tie text-indigo-500 mr-1"></i> Data Khusus: Kepala Sekolah Bahasa Jepang
+            </h2>
+            <div class="bg-white shadow rounded-lg overflow-x-auto border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-indigo-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-indigo-800 uppercase tracking-wider">Nama</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-indigo-800 uppercase tracking-wider">Posisi</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-indigo-800 uppercase tracking-wider">Pendidikan</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-indigo-800 uppercase tracking-wider">Pengalaman & Sertifikasi</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-indigo-800 uppercase tracking-wider">Status & Tgl</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-indigo-800 uppercase tracking-wider w-40">Dokumen CV</th>
+                            <th id="th-aksi-headmaster" class="px-6 py-3 text-center text-xs font-bold text-indigo-800 uppercase tracking-wider w-24">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="headmaster-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Data Kepala Sekolah akan dirender JS di sini -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TABEL UTAMA (Posisi Lainnya) -->
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 mb-3 border-l-4 border-blue-500 pl-3">
+                <i class="fa-solid fa-users text-blue-500 mr-1"></i> Data Kandidat Umum
+            </h2>
+            <div class="bg-white shadow rounded-lg overflow-x-auto border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Posisi</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Pendidikan</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status & Tgl</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-40">Dokumen CV</th>
+                            <th id="th-aksi-general" class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-24">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="general-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Data Kandidat Umum akan dirender JS di sini -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Simulasi Data Awal (Backend belum disambung)
+        let candidates = [
+            { id: 1, name: "Budi Santoso", position: "Staff Administrasi", education: "S1 Ilmu Komunikasi", status: "Belum wawancara", date: "2026-04-10", experience: 0, experienceDetail: "", certification: "", cv: null },
+            { id: 2, name: "Aiko Tanaka", position: "Kepala Sekolah Bahasa Jepang", education: "S2 Pendidikan, S1 Sastra Jepang", status: "Belum wawancara", date: "2026-04-12", experience: 5, experienceDetail: "Mantan Kepala Kurikulum di Tokyo Language School", certification: "JLPT N1", cv: null },
+            { id: 3, name: "Ahmad Rizky", position: "Pengajar Bahasa Jepang", education: "S1 Sastra Jepang", status: "Sudah diberikan kepada ketua divisi terkait", date: "2026-04-05", experience: 3, experienceDetail: "", certification: "JLPT N3", cv: "CV_Ahmad.pdf" },
+            { id: 4, name: "Siti Aminah", position: "Kepala Sekolah Bahasa Jepang", education: "S3 Linguistik, S2 Manajemen Pendidikan", status: "Diterima", date: "2026-04-01", experience: 8, experienceDetail: "8 Tahun memimpin lembaga kursus bahasa di Osaka", certification: "JLPT N2", cv: "Siti_CV_Update.pdf" }
+        ];
+
+        let activeTab = 'masuk'; // 'masuk' (Belum wawancara) ATAU 'lanjutan' (selain Belum wawancara)
+        let editingId = null;
+        let currentRole = 'viewer'; // Default ke viewer
+
+        // --- SISTEM OTENTIKASI & ROLE ---
+        function initAuth() {
+            if (localStorage.getItem('hr_admin_logged_in') === 'true' || sessionStorage.getItem('hr_admin_logged_in') === 'true') {
+                currentRole = 'admin';
+            }
+            updateHeaderUI();
+        }
+
+        function updateHeaderUI() {
+            const statusBadge = document.getElementById('user-status-badge');
+            const authBtn = document.getElementById('auth-btn');
+
+            if (currentRole === 'admin') {
+                statusBadge.className = "flex items-center bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 mr-3";
+                statusBadge.innerHTML = '<i class="fa-solid fa-user-shield text-blue-500 mr-2"></i><span class="text-sm font-medium text-blue-700">Mode: Admin HR</span>';
+                authBtn.className = "bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors";
+                authBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket mr-1"></i> Logout';
+                authBtn.onclick = handleLogout;
+            } else {
+                statusBadge.className = "flex items-center bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200 mr-3";
+                statusBadge.innerHTML = '<i class="fa-solid fa-eye text-gray-500 mr-2"></i><span class="text-sm font-medium text-gray-600">Mode: Viewer</span>';
+                authBtn.className = "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors";
+                authBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-1"></i> Login Admin';
+                authBtn.onclick = openLoginModal;
+            }
+        }
+
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-username').value;
+            const pass = document.getElementById('login-password').value;
+            const remember = document.getElementById('login-remember').checked;
+            const errorDiv = document.getElementById('login-error');
+
+            if (user === 'adminhrdyonasindo' && pass === 'admin321') {
+                currentRole = 'admin';
+                if (remember) {
+                    localStorage.setItem('hr_admin_logged_in', 'true');
+                } else {
+                    // Hanya disimpan selama tab browser ini terbuka (jika tidak dicentang)
+                    sessionStorage.setItem('hr_admin_logged_in', 'true');
+                }
+                closeLoginModal();
+                updateHeaderUI();
+                renderTables();
+            } else {
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            currentRole = 'viewer';
+            editingId = null; // Batalkan mode edit jika sedang berjalan
+            localStorage.removeItem('hr_admin_logged_in');
+            sessionStorage.removeItem('hr_admin_logged_in');
+            updateHeaderUI();
+            renderTables();
+        }
+
+        // Fungsi berpindah tab
+        function switchTab(tab) {
+            activeTab = tab;
+            
+            // Ubah style tombol tab
+            const btnMasuk = document.getElementById('tab-masuk');
+            const btnLanjutan = document.getElementById('tab-lanjutan');
+
+            if (tab === 'masuk') {
+                btnMasuk.className = "px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50 focus:outline-none transition-colors rounded-t-lg";
+                btnLanjutan.className = "px-6 py-3 font-semibold text-gray-500 hover:text-blue-600 hover:bg-gray-50 focus:outline-none transition-colors rounded-t-lg border-b-2 border-transparent";
+            } else {
+                btnLanjutan.className = "px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50 focus:outline-none transition-colors rounded-t-lg";
+                btnMasuk.className = "px-6 py-3 font-semibold text-gray-500 hover:text-blue-600 hover:bg-gray-50 focus:outline-none transition-colors rounded-t-lg border-b-2 border-transparent";
+            }
+
+            renderTables();
+        }
+
+        // Fungsi Reset Filter
+        function resetFilters() {
+            document.getElementById('filter-position').value = '';
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-experience').value = '';
+            renderTables();
+        }
+
+        // Fungsi Filter
+        function applyFilters() {
+            renderTables();
+        }
+
+        // Dapatkan Ikon berdasarkan Status
+        function getStatusIcon(status) {
+            if (status === 'Belum wawancara') return '<i class="fa-solid fa-clock text-yellow-500 mr-1"></i>';
+            if (status === 'Sudah diberikan kepada ketua divisi terkait') return '<i class="fa-solid fa-paper-plane text-blue-500 mr-1"></i>';
+            if (status === 'Diterima') return '<i class="fa-solid fa-circle-check text-green-500 mr-1"></i>';
+            return '';
+        }
+
+        // Fungsi Render Utama
+        function renderTables() {
+            const generalTbody = document.getElementById('general-table-body');
+            const headmasterTbody = document.getElementById('headmaster-table-body');
+            
+            generalTbody.innerHTML = '';
+            headmasterTbody.innerHTML = '';
+
+            const isAdmin = currentRole === 'admin';
+
+            // Sembunyikan atau tampilkan header Aksi tergantung role
+            document.getElementById('th-aksi-headmaster').style.display = isAdmin ? '' : 'none';
+            document.getElementById('th-aksi-general').style.display = isAdmin ? '' : 'none';
+
+            // Ambil Nilai Filter
+            const fPos = document.getElementById('filter-position').value.toLowerCase();
+            const fStat = document.getElementById('filter-status').value;
+            const fExp = parseInt(document.getElementById('filter-experience').value) || 0;
+
+            let countGeneral = 0;
+            let countHeadmaster = 0;
+
+            candidates.forEach(c => {
+                // Logika pemisahan Tab
+                const isMasuk = c.status === "Belum wawancara";
+                if (activeTab === 'masuk' && !isMasuk) return;
+                if (activeTab === 'lanjutan' && isMasuk) return;
+
+                // Logika Filter
+                if (fPos && !c.position.toLowerCase().includes(fPos)) return;
+                if (fStat && c.status !== fStat) return;
+                if (c.experience < fExp) return;
+
+                const isHeadmaster = c.position.toLowerCase() === "kepala sekolah bahasa jepang";
+                const isEditing = isAdmin && c.id === editingId;
+
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+
+                if (isEditing) {
+                    // --- MODE EDIT ---
+                    if (isHeadmaster) {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap"><input type="text" id="edit-name-${c.id}" value="${c.name}" class="w-full border rounded p-1 text-sm"></td>
+                            <td class="px-6 py-4"><input type="text" id="edit-pos-${c.id}" value="${c.position}" class="w-full border rounded p-1 text-sm"></td>
+                            <td class="px-6 py-4"><input type="text" id="edit-edu-${c.id}" value="${c.education || ''}" placeholder="Contoh: S1 Sastra Jepang..." class="w-full border rounded p-1 text-sm"></td>
+                            <td class="px-6 py-4">
+                                <input type="number" id="edit-exp-${c.id}" value="${c.experience}" placeholder="Lama Pengalaman (Tahun)" class="w-full border rounded p-1 text-sm mb-1" min="0">
+                                <textarea id="edit-exp-detail-${c.id}" placeholder="Detail Pengalaman Kerja..." class="w-full border rounded p-1 text-sm mb-1" rows="2">${c.experienceDetail || ''}</textarea>
+                                <input type="text" id="edit-cert-${c.id}" value="${c.certification}" placeholder="Sertifikasi (mis. JLPT N1)" class="w-full border rounded p-1 text-sm">
+                            </td>
+                            <td class="px-6 py-4">
+                                <select id="edit-status-${c.id}" class="w-full border rounded p-1 text-sm mb-1">
+                                    <option value="Belum wawancara" ${c.status === 'Belum wawancara' ? 'selected' : ''}>Belum wawancara</option>
+                                    <option value="Sudah diberikan kepada ketua divisi terkait" ${c.status === 'Sudah diberikan kepada ketua divisi terkait' ? 'selected' : ''}>Sudah diberikan ke divisi terkait</option>
+                                    <option value="Diterima" ${c.status === 'Diterima' ? 'selected' : ''}>Diterima</option>
+                                </select>
+                                <input type="date" id="edit-date-${c.id}" value="${c.date}" class="w-full border rounded p-1 text-sm">
+                            </td>
+                            <td class="px-6 py-4 text-center">-</td>
+                            <td class="px-6 py-4 text-center space-y-1">
+                                <button onclick="saveEdit(${c.id}, true)" class="w-full bg-green-500 hover:bg-green-600 text-white rounded py-1 text-xs"><i class="fa-solid fa-check"></i> Simpan</button>
+                                <button onclick="cancelEdit()" class="w-full bg-red-500 hover:bg-red-600 text-white rounded py-1 text-xs"><i class="fa-solid fa-xmark"></i> Batal</button>
+                            </td>
+                        `;
+                    } else {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap"><input type="text" id="edit-name-${c.id}" value="${c.name}" class="w-full border rounded p-1 text-sm"></td>
+                            <td class="px-6 py-4"><input type="text" id="edit-pos-${c.id}" value="${c.position}" class="w-full border rounded p-1 text-sm"></td>
+                            <td class="px-6 py-4"><input type="text" id="edit-edu-${c.id}" value="${c.education || ''}" placeholder="Contoh: S1 Administrasi..." class="w-full border rounded p-1 text-sm"></td>
+                            <td class="px-6 py-4">
+                                <select id="edit-status-${c.id}" class="w-full border rounded p-1 text-sm mb-1">
+                                    <option value="Belum wawancara" ${c.status === 'Belum wawancara' ? 'selected' : ''}>Belum wawancara</option>
+                                    <option value="Sudah diberikan kepada ketua divisi terkait" ${c.status === 'Sudah diberikan kepada ketua divisi terkait' ? 'selected' : ''}>Sudah diberikan ke divisi terkait</option>
+                                    <option value="Diterima" ${c.status === 'Diterima' ? 'selected' : ''}>Diterima</option>
+                                </select>
+                                <input type="date" id="edit-date-${c.id}" value="${c.date}" class="w-full border rounded p-1 text-sm">
+                            </td>
+                            <td class="px-6 py-4 text-center">-</td>
+                            <td class="px-6 py-4 text-center space-y-1">
+                                <button onclick="saveEdit(${c.id}, false)" class="w-full bg-green-500 hover:bg-green-600 text-white rounded py-1 text-xs"><i class="fa-solid fa-check"></i> Simpan</button>
+                                <button onclick="cancelEdit()" class="w-full bg-red-500 hover:bg-red-600 text-white rounded py-1 text-xs"><i class="fa-solid fa-xmark"></i> Batal</button>
+                            </td>
+                        `;
+                    }
+                } else {
+                    // --- MODE BACA (READ) ---
+                    // Template Kolom CV (Berbeda antara Admin dan Viewer)
+                    let cvHtml = '';
+                    if (isAdmin) {
+                        cvHtml = `
+                            <div class="border-2 border-dashed rounded p-3 text-center cursor-pointer transition-colors ${c.cv ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:bg-gray-50'}"
+                                 ondragover="handleDragOver(event)" 
+                                 ondragleave="handleDragLeave(event)" 
+                                 ondrop="handleDrop(event, ${c.id})">
+                                ${c.cv 
+                                    ? '<i class="fa-solid fa-file-pdf text-green-600 text-xl mb-1"></i><p class="text-[10px] text-green-700 font-medium truncate" title="' + c.cv + '">' + c.cv + '</p>' 
+                                    : '<i class="fa-solid fa-cloud-arrow-up text-gray-400 text-xl mb-1"></i><p class="text-[10px] text-gray-500">Tarik CV kesini</p>'
+                                }
+                            </div>
+                        `;
+                    } else {
+                        // View mode untuk Viewer: Tidak bisa drag and drop, pointer cursor dinonaktifkan
+                        cvHtml = `
+                            <div class="border rounded p-3 text-center ${c.cv ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'}">
+                                ${c.cv 
+                                    ? '<i class="fa-solid fa-file-pdf text-green-600 text-xl mb-1"></i><p class="text-[10px] text-green-700 font-medium truncate" title="' + c.cv + '">' + c.cv + '</p>' 
+                                    : '<i class="fa-solid fa-file-circle-xmark text-gray-300 text-xl mb-1"></i><p class="text-[10px] text-gray-400">Tidak ada CV</p>'
+                                }
+                            </div>
+                        `;
+                    }
+
+                    // Aksi HTML (Kosong jika bukan Admin)
+                    const aksiHtml = isAdmin ? `
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="startEdit(${c.id})" class="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-full" title="Edit Data"><i class="fa-solid fa-pen"></i></button>
+                        </td>
+                    ` : '';
+
+                    if (isHeadmaster) {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-medium text-gray-900">${c.name}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">${c.position}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">${c.education || '-'}</td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm bg-indigo-50 p-2 rounded border border-indigo-100">
+                                    <span class="block"><b>Lama:</b> ${c.experience} Tahun</span>
+                                    ${c.experienceDetail ? '<span class="block text-xs text-gray-700 mt-1 mb-1"><b>Detail:</b> ' + c.experienceDetail + '</span>' : ''}
+                                    <span class="block mt-1"><b>Sertifikasi:</b> ${c.certification || '-'}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium mb-1">${getStatusIcon(c.status)} ${c.status}</div>
+                                <div class="text-xs text-gray-500"><i class="fa-regular fa-calendar mr-1"></i>${c.date}</div>
+                            </td>
+                            <td class="px-6 py-4">${cvHtml}</td>
+                            ${aksiHtml}
+                        `;
+                        headmasterTbody.appendChild(tr);
+                        countHeadmaster++;
+                    } else {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-medium text-gray-900">${c.name}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">${c.position}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">${c.education || '-'}</td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium mb-1">${getStatusIcon(c.status)} <span class="truncate" title="${c.status}">${c.status}</span></div>
+                                <div class="text-xs text-gray-500"><i class="fa-regular fa-calendar mr-1"></i>${c.date}</div>
+                            </td>
+                            <td class="px-6 py-4">${cvHtml}</td>
+                            ${aksiHtml}
+                        `;
+                        generalTbody.appendChild(tr);
+                        countGeneral++;
+                    }
+                }
+
+                // Tambahkan baris edit ke tabel yang tepat jika sedang diedit
+                if (isEditing) {
+                    if (isHeadmaster) headmasterTbody.appendChild(tr);
+                    else generalTbody.appendChild(tr);
+                }
+            });
+
+            // Tampilkan pesan kosong jika tidak ada data
+            if (countHeadmaster === 0 && !editingId) {
+                headmasterTbody.innerHTML = `<tr><td colSpan="${isAdmin ? 7 : 6}" class="px-6 py-8 text-center text-gray-400 italic">Tidak ada data Kepala Sekolah di tab ini.</td></tr>`;
+            }
+            if (countGeneral === 0 && !editingId) {
+                generalTbody.innerHTML = `<tr><td colSpan="${isAdmin ? 6 : 5}" class="px-6 py-8 text-center text-gray-400 italic">Tidak ada data kandidat umum di tab ini.</td></tr>`;
+            }
+        }
+
+        // --- FUNGSI EDIT ---
+        function startEdit(id) {
+            editingId = id;
+            renderTables();
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            renderTables();
+        }
+
+        function saveEdit(id, isHeadmaster) {
+            const name = document.getElementById(`edit-name-${id}`).value;
+            const position = document.getElementById(`edit-pos-${id}`).value;
+            const education = document.getElementById(`edit-edu-${id}`).value;
+            const status = document.getElementById(`edit-status-${id}`).value;
+            const date = document.getElementById(`edit-date-${id}`).value;
+            
+            let exp = 0;
+            let expDetail = "";
+            let cert = "";
+
+            if (isHeadmaster) {
+                exp = parseInt(document.getElementById(`edit-exp-${id}`).value) || 0;
+                expDetail = document.getElementById(`edit-exp-detail-${id}`).value;
+                cert = document.getElementById(`edit-cert-${id}`).value;
+            }
+
+            // Perbarui array data
+            const index = candidates.findIndex(c => c.id === id);
+            if (index !== -1) {
+                candidates[index].name = name;
+                candidates[index].position = position;
+                candidates[index].education = education;
+                candidates[index].status = status;
+                candidates[index].date = date;
+                if (isHeadmaster) {
+                    candidates[index].experience = exp;
+                    candidates[index].experienceDetail = expDetail;
+                    candidates[index].certification = cert;
+                }
+
+                // Jika posisi diubah dari Kepala Sekolah menjadi yang lain (atau sebaliknya)
+                // Kita inisialisasi properti tambahan agar tidak error saat render ulang
+                if (position.toLowerCase() === "kepala sekolah bahasa jepang" && !isHeadmaster) {
+                     candidates[index].experience = 0;
+                     candidates[index].experienceDetail = "";
+                     candidates[index].certification = "";
+                }
+            }
+
+            editingId = null;
+            renderTables(); // Otomatis akan pindah tabel atau pindah tab jika status berubah
+        }
+
+        // --- FUNGSI DRAG AND DROP ---
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, id) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const fileName = files[0].name;
+                const index = candidates.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    candidates[index].cv = fileName;
+                    renderTables(); // Update UI
+                }
+            }
+        }
+
+        // Render awal saat halaman dimuat
+        initAuth();
+        renderTables();
+    </script>
+</body>
+</html>
