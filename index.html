@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Dashboard - LPK Yonasindo Intra Pratama</title>
-    <!-- Tailwind CSS untuk styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome untuk Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Animasi saat file di-drag ke dropzone */
@@ -20,7 +18,6 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-    <!-- Header -->
     <header class="bg-white shadow-sm border-b-4 border-blue-600">
         <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div class="flex items-center">
@@ -30,7 +27,6 @@
                 </h1>
             </div>
             
-            <!-- Mode Info / Auth Button -->
             <div class="flex items-center">
                 <div id="user-status-badge" class="flex items-center bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200 mr-3">
                     <i class="fa-solid fa-eye text-gray-500 mr-2"></i>
@@ -43,7 +39,6 @@
         </div>
     </header>
 
-    <!-- Modal Login -->
     <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-xl p-6 w-96 max-w-full m-4">
             <div class="flex justify-between items-center mb-4">
@@ -73,19 +68,98 @@
         </div>
     </div>
 
+    <div id="add-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
+                <h3 class="text-lg font-bold text-gray-900"><i class="fa-solid fa-user-plus text-blue-600 mr-2"></i>Tambah Kandidat Baru</h3>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 overflow-y-auto flex-1">
+                <form id="add-form" onsubmit="handleAddSubmit(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap *</label>
+                            <input type="text" id="add-name" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500 mb-4" required>
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Posisi Pekerjaan *</label>
+                            <input type="text" id="add-pos" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500 mb-4" placeholder="Ketik 'Kepala Sekolah Bahasa Jepang' untuk menu ekstra" required oninput="toggleAddExtraFields()">
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pendidikan</label>
+                            <input type="text" id="add-edu" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500 mb-4" placeholder="Misal: S1 Sastra Jepang">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Tahap *</label>
+                            <select id="add-status" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500 mb-4" required>
+                                <option value="Belum wawancara">Belum wawancara</option>
+                                <option value="Sudah diberikan kepada ketua divisi terkait">Sudah diberikan ke divisi terkait</option>
+                                <option value="Diterima">Diterima</option>
+                            </select>
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk/Update *</label>
+                            <input type="date" id="add-date" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500 mb-4" required>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-4 mt-2">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Tautan Profil Sosial/Kerja</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Link Glints</label>
+                                <input type="url" id="add-glints" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 mb-2" placeholder="https://glints.com/...">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Link Jobstreet</label>
+                                <input type="url" id="add-jobstreet" class="w-full border border-gray-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500 mb-2" placeholder="https://jobstreet.co.id/...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="add-extra-fields" class="bg-indigo-50 border border-indigo-200 rounded p-4 mt-4 hidden">
+                        <h4 class="text-sm font-bold text-indigo-800 mb-3"><i class="fa-solid fa-star mr-1"></i>Detail Khusus Kepala Sekolah</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-indigo-700 mb-1">Lama Pengalaman (Tahun)</label>
+                                <input type="number" id="add-exp" class="w-full border border-indigo-300 rounded p-2 text-sm mb-2" min="0" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-indigo-700 mb-1">Sertifikasi Bahasa</label>
+                                <input type="text" id="add-cert" class="w-full border border-indigo-300 rounded p-2 text-sm mb-2" placeholder="Misal: JLPT N1">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-medium text-indigo-700 mb-1">Detail Pengalaman Kerja</label>
+                                <textarea id="add-exp-detail" class="w-full border border-indigo-300 rounded p-2 text-sm mb-2" rows="2" placeholder="Jelaskan rekam jejaknya di sini..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+            </div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-lg flex justify-end space-x-2">
+                <button type="button" onclick="closeAddModal()" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 transition-colors">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded transition-colors"><i class="fa-solid fa-save mr-1"></i> Simpan Kandidat</button>
+            </div>
+            </form>
+        </div>
+    </div>
+
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         
-        <!-- Tab Navigasi -->
-        <div class="flex space-x-2 border-b-2 border-gray-200 mb-6">
-            <button id="tab-masuk" onclick="switchTab('masuk')" class="px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50 focus:outline-none transition-colors rounded-t-lg">
-                <i class="fa-solid fa-inbox mr-1"></i> Kandidat Masuk
-            </button>
-            <button id="tab-lanjutan" onclick="switchTab('lanjutan')" class="px-6 py-3 font-semibold text-gray-500 hover:text-blue-600 hover:bg-gray-50 focus:outline-none transition-colors rounded-t-lg border-b-2 border-transparent">
-                <i class="fa-solid fa-user-check mr-1"></i> Kandidat Lanjutan
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end border-b-2 border-gray-200 mb-6 gap-4 pb-2 sm:pb-0">
+            <div class="flex space-x-2">
+                <button id="tab-masuk" onclick="switchTab('masuk')" class="px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50 focus:outline-none transition-colors rounded-t-lg">
+                    <i class="fa-solid fa-inbox mr-1"></i> Kandidat Masuk
+                </button>
+                <button id="tab-lanjutan" onclick="switchTab('lanjutan')" class="px-6 py-3 font-semibold text-gray-500 hover:text-blue-600 hover:bg-gray-50 focus:outline-none transition-colors rounded-t-lg border-b-2 border-transparent">
+                    <i class="fa-solid fa-user-check mr-1"></i> Kandidat Lanjutan
+                </button>
+            </div>
+            
+            <button id="btn-add-candidate" onclick="openAddModal()" class="hidden mb-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded shadow transition-colors items-center">
+                <i class="fa-solid fa-plus mr-2"></i>Tambah Kandidat
             </button>
         </div>
 
-        <!-- Filter & Sortir Section -->
         <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap gap-4 items-end">
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Cari Posisi</label>
@@ -111,7 +185,6 @@
             </div>
         </div>
 
-        <!-- TABEL KEPALA SEKOLAH (Eksklusif) -->
         <div class="mb-8">
             <h2 class="text-xl font-bold text-gray-800 mb-3 border-l-4 border-indigo-500 pl-3">
                 <i class="fa-solid fa-user-tie text-indigo-500 mr-1"></i> Data Khusus: Kepala Sekolah Bahasa Jepang
@@ -131,13 +204,11 @@
                         </tr>
                     </thead>
                     <tbody id="headmaster-table-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Data Kepala Sekolah akan dirender JS di sini -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- TABEL UTAMA (Posisi Lainnya) -->
         <div>
             <h2 class="text-xl font-bold text-gray-800 mb-3 border-l-4 border-blue-500 pl-3">
                 <i class="fa-solid fa-users text-blue-500 mr-1"></i> Data Kandidat Umum
@@ -156,8 +227,7 @@
                         </tr>
                     </thead>
                     <tbody id="general-table-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Data Kandidat Umum akan dirender JS di sini -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
@@ -166,7 +236,7 @@
 
     <script>
         // URL Web App Google Apps Script (Ganti URL di bawah setelah melakukan Deploy)
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzG4bK9Srm8hML2lQx9XWC4bYAMHUBu9nxWWMgkWrUboAjCOMqiCkzFR85ACA9n8Dy4/exec';
+        const SCRIPT_URL = 'TARUH_URL_WEB_APP_DISINI';
 
         let candidates = []; // Data sekarang akan diambil dari Google Sheets
         
@@ -178,9 +248,8 @@
         // --- FUNGSI AMBIL DATA DARI BACKEND ---
         async function loadCandidates() {
             isLoading = true;
-            renderTables(); // Menampilkan teks loading jika perlu
+            renderTables();
             try {
-                // Mencegah error jika URL belum diganti oleh pengguna
                 if (SCRIPT_URL === 'TARUH_URL_WEB_APP_DISINI') {
                     console.warn("Harap masukkan URL Web App Google Sheets Anda.");
                     isLoading = false;
@@ -212,6 +281,7 @@
         function updateHeaderUI() {
             const statusBadge = document.getElementById('user-status-badge');
             const authBtn = document.getElementById('auth-btn');
+            const addBtn = document.getElementById('btn-add-candidate');
 
             if (currentRole === 'admin') {
                 statusBadge.className = "flex items-center bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 mr-3";
@@ -219,12 +289,14 @@
                 authBtn.className = "bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors";
                 authBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket mr-1"></i> Logout';
                 authBtn.onclick = handleLogout;
+                addBtn.style.display = 'flex'; // Munculkan tombol tambah
             } else {
                 statusBadge.className = "flex items-center bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200 mr-3";
                 statusBadge.innerHTML = '<i class="fa-solid fa-eye text-gray-500 mr-2"></i><span class="text-sm font-medium text-gray-600">Mode: Viewer</span>';
                 authBtn.className = "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors";
                 authBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-1"></i> Login Admin';
                 authBtn.onclick = openLoginModal;
+                addBtn.style.display = 'none'; // Sembunyikan tombol tambah
             }
         }
 
@@ -251,7 +323,6 @@
                 if (remember) {
                     localStorage.setItem('hr_admin_logged_in', 'true');
                 } else {
-                    // Hanya disimpan selama tab browser ini terbuka (jika tidak dicentang)
                     sessionStorage.setItem('hr_admin_logged_in', 'true');
                 }
                 closeLoginModal();
@@ -264,18 +335,71 @@
 
         function handleLogout() {
             currentRole = 'viewer';
-            editingId = null; // Batalkan mode edit jika sedang berjalan
+            editingId = null; 
             localStorage.removeItem('hr_admin_logged_in');
             sessionStorage.removeItem('hr_admin_logged_in');
             updateHeaderUI();
             renderTables();
         }
 
+        // --- FUNGSI TAMBAH KANDIDAT ---
+        function openAddModal() {
+            document.getElementById('add-modal').classList.remove('hidden');
+            document.getElementById('add-form').reset();
+            // Atur tanggal ke hari ini sebagai default
+            document.getElementById('add-date').valueAsDate = new Date();
+            toggleAddExtraFields();
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+        }
+
+        function toggleAddExtraFields() {
+            const pos = document.getElementById('add-pos').value.toLowerCase();
+            const extraDiv = document.getElementById('add-extra-fields');
+            if (pos === 'kepala sekolah bahasa jepang') {
+                extraDiv.classList.remove('hidden');
+            } else {
+                extraDiv.classList.add('hidden');
+            }
+        }
+
+        function handleAddSubmit(e) {
+            e.preventDefault();
+            const pos = document.getElementById('add-pos').value;
+            const isHeadmaster = pos.toLowerCase() === 'kepala sekolah bahasa jepang';
+
+            // Buat objek data kandidat baru. 
+            // Kita gunakan Timestamp (Date.now) sebagai ID Unik Sementara
+            const newCandidate = {
+                id: Date.now(), 
+                name: document.getElementById('add-name').value,
+                position: pos,
+                education: document.getElementById('add-edu').value,
+                glintsLink: document.getElementById('add-glints').value,
+                jobstreetLink: document.getElementById('add-jobstreet').value,
+                status: document.getElementById('add-status').value,
+                date: document.getElementById('add-date').value,
+                experience: isHeadmaster ? (parseInt(document.getElementById('add-exp').value) || 0) : 0,
+                experienceDetail: isHeadmaster ? document.getElementById('add-exp-detail').value : "",
+                certification: isHeadmaster ? document.getElementById('add-cert').value : "",
+                cv: ""
+            };
+
+            // Tambahkan langsung ke memori tabel supaya langsung muncul
+            candidates.push(newCandidate);
+            renderTables();
+            closeAddModal();
+
+            // Kirim ke backend (Spreadsheet akan mendeteksi ID baru ini dan menambahkannya ke baris paling bawah)
+            updateCandidateToBackend(newCandidate);
+        }
+
         // Fungsi berpindah tab
         function switchTab(tab) {
             activeTab = tab;
             
-            // Ubah style tombol tab
             const btnMasuk = document.getElementById('tab-masuk');
             const btnLanjutan = document.getElementById('tab-lanjutan');
 
@@ -290,7 +414,6 @@
             renderTables();
         }
 
-        // Fungsi Reset Filter
         function resetFilters() {
             document.getElementById('filter-position').value = '';
             document.getElementById('filter-status').value = '';
@@ -298,12 +421,10 @@
             renderTables();
         }
 
-        // Fungsi Filter
         function applyFilters() {
             renderTables();
         }
 
-        // Dapatkan Ikon berdasarkan Status
         function getStatusIcon(status) {
             if (status === 'Belum wawancara') return '<i class="fa-solid fa-clock text-yellow-500 mr-1"></i>';
             if (status === 'Sudah diberikan kepada ketua divisi terkait') return '<i class="fa-solid fa-paper-plane text-blue-500 mr-1"></i>';
@@ -311,7 +432,6 @@
             return '';
         }
 
-        // Fungsi Render Utama
         function renderTables() {
             const generalTbody = document.getElementById('general-table-body');
             const headmasterTbody = document.getElementById('headmaster-table-body');
@@ -321,18 +441,15 @@
 
             const isAdmin = currentRole === 'admin';
 
-            // Sembunyikan atau tampilkan header Aksi tergantung role
             document.getElementById('th-aksi-headmaster').style.display = isAdmin ? '' : 'none';
             document.getElementById('th-aksi-general').style.display = isAdmin ? '' : 'none';
 
-            // Indikator Loading
             if (isLoading) {
                 headmasterTbody.innerHTML = `<tr><td colSpan="${isAdmin ? 8 : 7}" class="px-6 py-8 text-center text-blue-500 font-medium"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat data dari Google Sheets...</td></tr>`;
                 generalTbody.innerHTML = `<tr><td colSpan="${isAdmin ? 7 : 6}" class="px-6 py-8 text-center text-blue-500 font-medium"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memuat data dari Google Sheets...</td></tr>`;
                 return;
             }
 
-            // Ambil Nilai Filter
             const fPos = document.getElementById('filter-position').value.toLowerCase();
             const fStat = document.getElementById('filter-status').value;
             const fExp = parseInt(document.getElementById('filter-experience').value) || 0;
@@ -341,12 +458,10 @@
             let countHeadmaster = 0;
 
             candidates.forEach(c => {
-                // Logika pemisahan Tab
                 const isMasuk = c.status === "Belum wawancara";
                 if (activeTab === 'masuk' && !isMasuk) return;
                 if (activeTab === 'lanjutan' && isMasuk) return;
 
-                // Logika Filter
                 if (fPos && !c.position.toLowerCase().includes(fPos)) return;
                 if (fStat && c.status !== fStat) return;
                 if (c.experience < fExp) return;
@@ -358,7 +473,6 @@
                 tr.className = "hover:bg-gray-50 transition-colors";
 
                 if (isEditing) {
-                    // --- MODE EDIT ---
                     if (isHeadmaster) {
                         tr.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap"><input type="text" id="edit-name-${c.id}" value="${c.name}" class="w-full border rounded p-1 text-sm"></td>
@@ -412,8 +526,6 @@
                         `;
                     }
                 } else {
-                    // --- MODE BACA (READ) ---
-                    // Template Kolom CV (Berbeda antara Admin dan Viewer)
                     let cvHtml = '';
                     if (isAdmin) {
                         cvHtml = `
@@ -428,7 +540,6 @@
                             </div>
                         `;
                     } else {
-                        // View mode untuk Viewer: Tidak bisa drag and drop, pointer cursor dinonaktifkan
                         cvHtml = `
                             <div class="border rounded p-3 text-center ${c.cv ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'}">
                                 ${c.cv 
@@ -439,7 +550,6 @@
                         `;
                     }
                     
-                    // Template Profil Links
                     let profileHtml = '';
                     if (c.glintsLink) {
                         profileHtml += `<a href="${c.glintsLink}" target="_blank" class="text-blue-600 hover:underline text-xs flex items-center mb-1"><i class="fa-solid fa-link mr-1"></i>Glints</a>`;
@@ -451,7 +561,6 @@
                         profileHtml = `<span class="text-gray-400 text-xs italic">Tidak ada link</span>`;
                     }
 
-                    // Aksi HTML (Kosong jika bukan Admin)
                     const aksiHtml = isAdmin ? `
                         <td class="px-6 py-4 text-center">
                             <button onclick="startEdit(${c.id})" class="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-full" title="Edit Data"><i class="fa-solid fa-pen"></i></button>
@@ -506,14 +615,12 @@
                     }
                 }
 
-                // Tambahkan baris edit ke tabel yang tepat jika sedang diedit
                 if (isEditing) {
                     if (isHeadmaster) headmasterTbody.appendChild(tr);
                     else generalTbody.appendChild(tr);
                 }
             });
 
-            // Tampilkan pesan kosong jika tidak ada data
             if (countHeadmaster === 0 && !editingId) {
                 headmasterTbody.innerHTML = `<tr><td colSpan="${isAdmin ? 8 : 7}" class="px-6 py-8 text-center text-gray-400 italic">Tidak ada data Kepala Sekolah di tab ini.</td></tr>`;
             }
@@ -522,7 +629,6 @@
             }
         }
 
-        // --- FUNGSI EDIT ---
         function startEdit(id) {
             editingId = id;
             renderTables();
@@ -552,7 +658,6 @@
                 cert = document.getElementById(`edit-cert-${id}`).value;
             }
 
-            // Perbarui array data
             const index = candidates.findIndex(c => c.id === id);
             if (index !== -1) {
                 candidates[index].name = name;
@@ -569,28 +674,23 @@
                     candidates[index].certification = cert;
                 }
 
-                // Jika posisi diubah dari Kepala Sekolah menjadi yang lain (atau sebaliknya)
-                // Kita inisialisasi properti tambahan agar tidak error saat render ulang
                 if (position.toLowerCase() === "kepala sekolah bahasa jepang" && !isHeadmaster) {
                      candidates[index].experience = 0;
                      candidates[index].experienceDetail = "";
                      candidates[index].certification = "";
                 }
 
-                // Kirim perubahan ke backend Google Sheets
                 updateCandidateToBackend(candidates[index]);
             }
 
             editingId = null;
-            renderTables(); // Otomatis akan pindah tabel atau pindah tab jika status berubah
+            renderTables(); 
         }
 
-        // --- FUNGSI UPDATE KE BACKEND (POST) ---
         async function updateCandidateToBackend(candidateData) {
-            if (SCRIPT_URL === 'TARUH_URL_WEB_APP_DISINI') return; // Abaikan jika URL belum di-set
+            if (SCRIPT_URL === 'TARUH_URL_WEB_APP_DISINI') return; 
 
             try {
-                // Menggunakan text/plain agar tidak terkena blokir CORS di browser
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -601,11 +701,9 @@
                 });
             } catch (error) {
                 console.error("Gagal menyimpan ke spreadsheet:", error);
-                alert("Kesalahan jaringan: Gagal menyimpan data ke Spreadsheet.");
             }
         }
 
-        // --- FUNGSI DRAG AND DROP ---
         function handleDragOver(e) {
             e.preventDefault();
             e.currentTarget.classList.add('drag-over');
@@ -626,17 +724,15 @@
                 const index = candidates.findIndex(c => c.id === id);
                 if (index !== -1) {
                     candidates[index].cv = fileName;
-                    renderTables(); // Update UI
+                    renderTables(); 
                     
-                    // Simpan nama file ke backend
                     updateCandidateToBackend(candidates[index]);
                 }
             }
         }
 
-        // Render awal saat halaman dimuat
         initAuth();
-        loadCandidates(); // Ganti renderTables() dengan loadCandidates() agar memuat data dari Spreadsheet
+        loadCandidates(); 
     </script>
 </body>
 </html>
