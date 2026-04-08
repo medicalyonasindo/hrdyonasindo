@@ -252,11 +252,23 @@
 
     </main>
 
+    <!-- Footer LPK Yonasindo -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-3">
+            <p class="text-sm text-gray-500 text-center md:text-left">
+                &copy; 2026 LPK Yonasindo Intra Pratama. All Rights Reserved.
+            </p>
+            <p class="text-sm text-gray-500 text-center md:text-right">
+                Sistem dikembangkan oleh <span class="font-bold text-primary-600">Alexander Gorga</span>
+            </p>
+        </div>
+    </footer>
+
     <script>
         // ==========================================
         // GANTI TEXT DI BAWAH DENGAN URL APP SCRIPT ANDA
         // ==========================================
-        const SCRIPT_URL = 'TARUH_URL_WEB_APP_DISINI'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMf6SCNbNERg6wwLtkJLAwmmBqP3DLQAbxxqJi42QggQRZzBdim07g_XT9BRRmRyDC/exec'; 
 
         // Data Mock Awal (JSON Stringify untuk Array Experience)
         const dummyExpHeadmaster = JSON.stringify([
@@ -295,7 +307,8 @@
                         localStorage.setItem('yonasindo_candidates', JSON.stringify(candidates));
                     }
                 } else {
-                    const response = await fetch(SCRIPT_URL);
+                    // Penambahan { redirect: 'follow' } untuk handle CORS/Redirect dari Google Script
+                    const response = await fetch(SCRIPT_URL, { redirect: 'follow' });
                     const result = await response.json();
                     if (result.status === 'success') {
                         candidates = result.data;
@@ -303,7 +316,8 @@
                     }
                 }
             } catch (error) {
-                console.error("Gagal memuat data:", error);
+                // Diubah menjadi console.warn agar tidak memunculkan overlay error merah jika gagal fetch
+                console.warn("Peringatan: Gagal memuat data dari Google Sheets. Pastikan deployment diakses oleh 'Siapa saja' (Anyone). Menggunakan data lokal.", error.message);
                 const localData = localStorage.getItem('yonasindo_candidates');
                 if (localData) candidates = JSON.parse(localData);
             } finally {
@@ -838,13 +852,15 @@
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    redirect: 'follow', // Penambahan rule redirect
                     body: JSON.stringify({
                         action: 'update',
                         candidate: candidateData
                     })
                 });
             } catch (error) {
-                console.error("Gagal menyimpan ke spreadsheet:", error);
+                // Diubah ke console.warn agar tidak memecahkan aplikasi
+                console.warn("Peringatan: Gagal menyimpan ke spreadsheet. Pastikan deployment diakses oleh 'Siapa saja' (Anyone).", error.message);
             }
         }
 
